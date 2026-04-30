@@ -207,7 +207,13 @@ XOptions::GROUPID XOptions::getGroupID(ID id)
         case ID_SCAN_COLLECTION_CATALOG_FORMAT:
         case ID_SCAN_COLLECTION_COPY_ENABLED:
         case ID_SCAN_COLLECTION_COPY_FORMAT:
+        case ID_SCAN_COLLECTION_COPY_REMOVE:
+        case ID_SCAN_COLLECTION_COPY_MOVETOFIRST:
         case ID_SCAN_COLLECTION_LOG:
+        case ID_SCAN_COLLECTION_FEATURE_READBUFFERSIZE:
+        case ID_SCAN_COLLECTION_FEATURE_FILEBUFFERSIZE:
+        case ID_SCAN_COLLECTION_FEATURE_SSE2:
+        case ID_SCAN_COLLECTION_FEATURE_AVX2:
         case ID_SCAN_COLOR_INSTALLER:
         case ID_SCAN_COLOR_SFX:
         case ID_SCAN_COLOR_ARCHIVE:
@@ -465,6 +471,12 @@ void XOptions::load()
                 case ID_NU_LASTDIRECTORY: varDefault = ""; break;
                 case ID_FEATURE_READBUFFERSIZE: varDefault = 4 * 1024; break;
                 case ID_FEATURE_FILEBUFFERSIZE: varDefault = 64 * 1024 * 1024; break;
+                case ID_SCAN_COLLECTION_FEATURE_READBUFFERSIZE: varDefault = 4 * 1024; break;
+                case ID_SCAN_COLLECTION_FEATURE_FILEBUFFERSIZE: varDefault = 64 * 1024 * 1024; break;
+                case ID_SCAN_COLLECTION_FEATURE_SSE2: varDefault = true; break;
+                case ID_SCAN_COLLECTION_FEATURE_AVX2: varDefault = true; break;
+                case ID_SCAN_COLLECTION_COPY_REMOVE: varDefault = false; break;
+                case ID_SCAN_COLLECTION_COPY_MOVETOFIRST: varDefault = false; break;
                 default: varDefault = "";
             }
         }
@@ -497,10 +509,10 @@ void XOptions::load()
     }
 
 #ifdef USE_XSIMD
-    if (xsimd_is_sse2_present()) {
+    if (isIDPresent(ID_FEATURE_SSE2) && xsimd_is_sse2_present()) {
         xsimd_set_sse2(m_mapValues.value(ID_FEATURE_SSE2).toBool());
     }
-    if (xsimd_is_avx2_present()) {
+    if (isIDPresent(ID_FEATURE_AVX2) && xsimd_is_avx2_present()) {
         xsimd_set_avx2(m_mapValues.value(ID_FEATURE_AVX2).toBool());
     }
 #endif
@@ -687,7 +699,13 @@ QString XOptions::idToString(ID id)
         case ID_SCAN_COLLECTION_CATALOG_FORMAT: sResult = QString("Scan/Collection/CatalogFormat"); break;
         case ID_SCAN_COLLECTION_COPY_ENABLED: sResult = QString("Scan/Collection/CopyEnabled"); break;
         case ID_SCAN_COLLECTION_COPY_FORMAT: sResult = QString("Scan/Collection/CopyFormat"); break;
+        case ID_SCAN_COLLECTION_COPY_REMOVE: sResult = QString("Scan/Collection/CopyRemove"); break;
+        case ID_SCAN_COLLECTION_COPY_MOVETOFIRST: sResult = QString("Scan/Collection/CopyMoveToFirst"); break;
         case ID_SCAN_COLLECTION_LOG: sResult = QString("Scan/Collection/Log"); break;
+        case ID_SCAN_COLLECTION_FEATURE_READBUFFERSIZE: sResult = QString("Scan/Collection/Feature/ReadBufferSize"); break;
+        case ID_SCAN_COLLECTION_FEATURE_FILEBUFFERSIZE: sResult = QString("Scan/Collection/Feature/FileBufferSize"); break;
+        case ID_SCAN_COLLECTION_FEATURE_SSE2: sResult = QString("Scan/Collection/Feature/SSE2"); break;
+        case ID_SCAN_COLLECTION_FEATURE_AVX2: sResult = QString("Scan/Collection/Feature/AVX2"); break;
         case ID_SCAN_COLOR_INSTALLER: sResult = QString("Scan/Color/Installer"); break;
         case ID_SCAN_COLOR_SFX: sResult = QString("Scan/Color/Sfx"); break;
         case ID_SCAN_COLOR_ARCHIVE: sResult = QString("Scan/Color/Archive"); break;
@@ -1346,7 +1364,7 @@ void XOptions::setComboBox(QComboBox *pComboBox, XOptions::ID id)
         pComboBox->addItem(QString("INTEL"), "INTEL");
         pComboBox->addItem(QString("MASM"), "MASM");
         pComboBox->addItem(QString("MOTOROLA"), "MOTOROLA");
-    } else if (id == ID_FEATURE_READBUFFERSIZE) {
+    } else if ((id == ID_FEATURE_READBUFFERSIZE) || (id == ID_SCAN_COLLECTION_FEATURE_READBUFFERSIZE)) {
         pComboBox->addItem("", 0);
         pComboBox->addItem("1 KiB", 1 * 1024);
         pComboBox->addItem("2 KiB", 2 * 1024);
@@ -1358,7 +1376,7 @@ void XOptions::setComboBox(QComboBox *pComboBox, XOptions::ID id)
         pComboBox->addItem("128 KiB", 128 * 1024);
         pComboBox->addItem("256 KiB", 256 * 1024);
         pComboBox->addItem("512 KiB", 512 * 1024);
-    } else if (id == ID_FEATURE_FILEBUFFERSIZE) {
+    } else if ((id == ID_FEATURE_FILEBUFFERSIZE) || (id == ID_SCAN_COLLECTION_FEATURE_FILEBUFFERSIZE)) {
         pComboBox->addItem("", 0);
         pComboBox->addItem("1 MiB", 1 * 1024 * 1024);
         pComboBox->addItem("2 MiB", 2 * 1024 * 1024);
