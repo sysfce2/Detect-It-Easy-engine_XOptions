@@ -27,6 +27,11 @@
 #include <QVariant>
 #include <QVector>
 
+#ifdef QT_GUI_LIB
+#include <QPainter>
+#include <QTextOption>
+#endif
+
 #ifdef Q_OS_WIN
 #include <Windows.h>
 #include <WinCon.h>
@@ -85,6 +90,10 @@ public:
     void addRule(quint32 nGroupID, const QString &sString, const QString &sColorMain, const QString &sColorBackground, bool bIsCaseSensitive);
     QString toPlainText();
     void printConsole(CONSOLE_STATE *pConsoleState);
+#ifdef QT_GUI_LIB
+    void draw(QPainter *pPainter, QRectF rect) const;
+    void draw(QPainter *pPainter, QRectF rect, const QTextOption &textOption) const;
+#endif
 
     static qint32 colorToAnsiCode(const RGB_COLOR &color, bool bBackground = false);
     static QString colorNameToHex(const QString &sColorName);

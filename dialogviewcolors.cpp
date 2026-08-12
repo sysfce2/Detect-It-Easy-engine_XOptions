@@ -43,6 +43,7 @@ void DialogViewColors::setOptions(XOptions *pOptions, const QList<RECORD> &listR
     }
 
     m_pOptions = pOptions;
+    m_mapColors.clear();
 
     qint32 nNumberOfRecords = listRecords.count();
 

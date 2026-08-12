@@ -20,6 +20,11 @@
  */
 #include "xcolorstring.h"
 
+#ifdef QT_GUI_LIB
+#include <QColor>
+#include <QFontMetricsF>
+#endif
+
 XColorString::XColorString()
 {
 }
@@ -252,6 +257,51 @@ void XColorString::printConsole(CONSOLE_STATE *pConsoleState)
         }
     }
 }
+
+#ifdef QT_GUI_LIB
+void XColorString::draw(QPainter *pPainter, QRectF rect) const
+{
+    QTextOption textOption;
+    textOption.setWrapMode(QTextOption::NoWrap);
+
+    draw(pPainter, rect, textOption);
+}
+
+void XColorString::draw(QPainter *pPainter, QRectF rect, const QTextOption &textOption) const
+{
+    if (!pPainter) {
+        return;
+    }
+
+    pPainter->save();
+
+    qint32 nNumberOfParts = m_vecParts.count();
+
+    for (qint32 i = 0; i < nNumberOfParts; i++) {
+        const PART &part = m_vecParts.at(i);
+        QRectF rectPart = rect;
+        qreal dWidth = QFontMetricsF(pPainter->font()).horizontalAdvance(part.sText);
+        rectPart.setWidth(dWidth);
+
+        pPainter->save();
+
+        if (!part.colorRecord.sColorBackground.isEmpty()) {
+            pPainter->fillRect(rectPart, QColor(part.colorRecord.sColorBackground));
+        }
+
+        if (!part.colorRecord.sColorMain.isEmpty()) {
+            pPainter->setPen(QColor(part.colorRecord.sColorMain));
+        }
+
+        pPainter->drawText(rectPart, part.sText, textOption);
+        pPainter->restore();
+
+        rect.setLeft(rect.left() + dWidth);
+    }
+
+    pPainter->restore();
+}
+#endif
 
 XColorString::RGB_COLOR XColorString::parseColor(const QString &sColor)
 {

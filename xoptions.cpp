@@ -182,6 +182,7 @@ XOptions::GROUPID XOptions::getGroupID(ID id)
         case ID_VIEW_FONT_TEXTEDITS:
         case ID_VIEW_COLUMNS:
         case ID_VIEW_COLUMN_SIZES:
+        case ID_VIEW_SIZES:
         case ID_VIEW_ADVANCED:
         case ID_VIEW_SELECTSTYLE: result = GROUPID_VIEW; break;
         case ID_FILE_SAVELASTDIRECTORY:
@@ -302,6 +303,7 @@ XOptions::GROUPID XOptions::getGroupID(ID id)
         case ID_DISASM_COLOR_NUMBERS:
         case ID_DISASM_COLOR_OPCODE:
         case ID_DISASM_COLOR_REFS:
+        case ID_DISASM_COLOR_CURRENTIP:
         case ID_DISASM_COLOR_X86_REGS_GENERAL:
         case ID_DISASM_COLOR_X86_REGS_STACK:
         case ID_DISASM_COLOR_X86_REGS_SEGMENT:
@@ -641,6 +643,57 @@ bool XOptions::isValuePresent(ID id)
     return m_mapValues.contains(id);
 }
 
+QMap<QString, QString> XOptions::_parseSizeRecords(const QString &sValue)
+{
+    // One record per ';' entry, "name:base64" - base64's own '=' padding never
+    // collides because we split on the first ':' only and names carry neither.
+    QMap<QString, QString> mapResult;
+
+    QStringList listEntries = sValue.split(";", Qt::SkipEmptyParts);
+
+    for (qint32 i = 0; i < listEntries.count(); i++) {
+        const QString &sEntry = listEntries.at(i);
+        qint32 nSep = sEntry.indexOf(":");
+
+        if (nSep > 0) {
+            mapResult.insert(sEntry.left(nSep), sEntry.mid(nSep + 1));
+        }
+    }
+
+    return mapResult;
+}
+
+QString XOptions::_serializeSizeRecords(const QMap<QString, QString> &mapRecords)
+{
+    QString sResult;
+
+    QMap<QString, QString>::const_iterator it = mapRecords.constBegin();
+
+    while (it != mapRecords.constEnd()) {
+        if (!it.value().isEmpty()) {
+            sResult += it.key() + QString(":") + it.value() + QString(";");
+        }
+
+        ++it;
+    }
+
+    return sResult;
+}
+
+void XOptions::setSizeRecord(const QString &sName, const QByteArray &baValue)
+{
+    QMap<QString, QString> mapRecords = _parseSizeRecords(getValue(ID_VIEW_SIZES).toString());
+    mapRecords.insert(sName, QString::fromLatin1(baValue.toBase64()));
+    setValue(ID_VIEW_SIZES, _serializeSizeRecords(mapRecords));
+}
+
+QByteArray XOptions::getSizeRecord(const QString &sName)
+{
+    QMap<QString, QString> mapRecords = _parseSizeRecords(getValue(ID_VIEW_SIZES).toString());
+
+    return QByteArray::fromBase64(mapRecords.value(sName).toLatin1());
+}
+
 QVariant XOptions::getDefaultValue(ID id)
 {
     return m_mapDefaultValues.value(id);
@@ -705,6 +758,7 @@ QString XOptions::idToString(ID id)
         case ID_VIEW_FONT_TEXTEDITS: sResult = QString("View/Font/TextEdits"); break;
         case ID_VIEW_COLUMNS: sResult = QString("View/Columns"); break;
         case ID_VIEW_COLUMN_SIZES: sResult = QString("View/ColumnSizes"); break;
+        case ID_VIEW_SIZES: sResult = QString("View/Sizes"); break;
         case ID_VIEW_ADVANCED: sResult = QString("View/Advanced"); break;
         case ID_VIEW_SELECTSTYLE: sResult = QString("View/SelectStyle"); break;
         case ID_FILE_SAVELASTDIRECTORY: sResult = QString("File/SaveLastDirectory"); break;
@@ -831,6 +885,7 @@ QString XOptions::idToString(ID id)
         case ID_DISASM_COLOR_NUMBERS: sResult = QString("Disasm/Color/Numbers"); break;
         case ID_DISASM_COLOR_OPCODE: sResult = QString("Disasm/Color/Opcode"); break;
         case ID_DISASM_COLOR_REFS: sResult = QString("Disasm/Color/Refs"); break;
+        case ID_DISASM_COLOR_CURRENTIP: sResult = QString("Disasm/Color/CurrentIP"); break;
         case ID_DISASM_COLOR_X86_REGS_GENERAL: sResult = QString("Disasm/Color/x86/Regs/General"); break;
         case ID_DISASM_COLOR_X86_REGS_STACK: sResult = QString("Disasm/Color/x86/Regs/Stack"); break;
         case ID_DISASM_COLOR_X86_REGS_SEGMENT: sResult = QString("Disasm/Color/x86/Regs/Segment"); break;
@@ -2336,16 +2391,19 @@ QString XOptions::getApplicationDataPath()
 
     // dataPathAlt0 .. dataPathAltN
     if (!bResult) {
-        qint32 nIndex = 0;
-        while (true) {
-            QString sResult = qApp->property(QString("dataPathAlt%1").arg(nIndex).toUtf8().data()).toString();
+        for (qint32 nIndex = 0; nIndex < 10; nIndex++) {
+            const QString sPropertyName = QString("dataPathAlt%1").arg(nIndex);
+            const QVariant value = qApp->property(sPropertyName.toUtf8().constData());
+            if (!value.isValid()) {
+                continue;
+            }
 
-            if (QDir(sResult).exists()) {
+            const QString sAlternativePath = value.toString();
+            if (!sAlternativePath.isEmpty() && QDir(sAlternativePath).exists()) {
+                sResult = sAlternativePath;
                 bResult = true;
                 break;
             }
-
-            nIndex++;
         }
     }
 
@@ -2448,7 +2506,7 @@ QString XOptions::convertPathName(const QString &sPathName)
 
                 _sPathName = _sPathName.replace("$data", sPath);
 
-                if (QDir(sResult).exists()) {
+                if (!sPath.isEmpty() && isPathExists(_sPathName)) {
                     bSuccess = true;
                     break;
                 }

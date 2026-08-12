@@ -59,6 +59,12 @@ void XOptionsWidget::setOptions(XOptions *pOptions, const QString &sApplicationD
     m_pOptions = pOptions;
     m_sApplicationDisplayName = sApplicationDisplayName;
 
+    ui->pushButtonDefault->setEnabled(m_pOptions != nullptr);
+
+    if (!m_pOptions) {
+        return;
+    }
+
     if (m_pOptions->isGroupIDPresent(XOptions::GROUPID_VIEW)) {
         addListRecord(tr("Appearance"), 0);
         ui->pageView->setProperty("GROUPID", XOptions::GROUPID_VIEW);
@@ -145,6 +151,10 @@ void XOptionsWidget::reloadData(bool bSaveSelection)
 
 void XOptionsWidget::save()
 {
+    if (!m_pOptions) {
+        return;
+    }
+
     if (m_pOptions->isIDPresent(XOptions::ID_VIEW_STAYONTOP)) {
         m_pOptions->getCheckBox(ui->checkBoxViewStayOnTop, XOptions::ID_VIEW_STAYONTOP);
     }
@@ -240,6 +250,10 @@ void XOptionsWidget::save()
 
 void XOptionsWidget::reload()
 {
+    if (!m_pOptions) {
+        return;
+    }
+
     if (m_pOptions->isIDPresent(XOptions::ID_VIEW_STAYONTOP)) {
         m_pOptions->setCheckBox(ui->checkBoxViewStayOnTop, XOptions::ID_VIEW_STAYONTOP);
     } else {
@@ -388,7 +402,7 @@ void XOptionsWidget::reload()
 
 void XOptionsWidget::on_listWidgetOptions_currentRowChanged(int nCurrentRow)
 {
-    if (nCurrentRow < ui->stackedWidgetOptions->count()) {
+    if ((nCurrentRow >= 0) && (nCurrentRow < ui->stackedWidgetOptions->count())) {
         qint32 nIndex = ui->listWidgetOptions->item(nCurrentRow)->data(Qt::UserRole).toInt();
         ui->stackedWidgetOptions->setCurrentIndex(nIndex);
     }
@@ -396,7 +410,7 @@ void XOptionsWidget::on_listWidgetOptions_currentRowChanged(int nCurrentRow)
 
 void XOptionsWidget::on_checkBoxFileContext_toggled(bool bChecked)
 {
-    if (m_pOptions->isIDPresent(XOptions::ID_FILE_CONTEXT)) {
+    if (m_pOptions && m_pOptions->isIDPresent(XOptions::ID_FILE_CONTEXT)) {
 #ifdef Q_OS_WIN
         if (m_pOptions->checkContext(m_sApplicationDisplayName, m_pOptions->getValue(XOptions::ID_FILE_CONTEXT).toString(), m_userRole) != bChecked) {
             bool bSuccess = false;
@@ -423,6 +437,10 @@ void XOptionsWidget::on_checkBoxFileContext_toggled(bool bChecked)
 void XOptionsWidget::on_checkBoxFileSetEnvVar_toggled(bool bChecked)
 {
 #ifdef Q_OS_WIN
+    if (!m_pOptions) {
+        return;
+    }
+
     QString appDir = QFileInfo(QCoreApplication::applicationFilePath()).absolutePath();
     QString formattedDir = QDir::toNativeSeparators(appDir);
 
@@ -467,6 +485,10 @@ void XOptionsWidget::on_toolButtonViewFontTextEdits_clicked()
 
 void XOptionsWidget::on_pushButtonDefault_clicked()
 {
+    if (!m_pOptions) {
+        return;
+    }
+
     m_pOptions->resetToDefault();
 
     emit reloadSignal();
@@ -476,16 +498,22 @@ void XOptionsWidget::on_pushButtonOK_clicked()
 {
     emit saveSignal();
 
-    if (m_pOptions->isRestartNeeded()) {
+    if (m_pOptions && m_pOptions->isRestartNeeded()) {
         QMessageBox::information(this, tr("Information"), tr("Please restart the application"));
     }
 
-    m_pParent->close();
+    QWidget *pTarget = m_pParent ? m_pParent : window();
+    if (pTarget) {
+        pTarget->close();
+    }
 }
 
 void XOptionsWidget::on_pushButtonCancel_clicked()
 {
-    m_pParent->close();
+    QWidget *pTarget = m_pParent ? m_pParent : window();
+    if (pTarget) {
+        pTarget->close();
+    }
 }
 
 void XOptionsWidget::registerShortcuts(bool bState)

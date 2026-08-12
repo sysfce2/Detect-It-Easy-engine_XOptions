@@ -122,7 +122,7 @@ QByteArray codec_cp437::convertFromUnicode(const QChar *in, int length, Converte
         *out++ = '8';
         *out++ = '0';
         while (length-- > 0) {
-            quint32 ch = in->unicode();
+            ch = in->unicode();
             ++in;
             *out++ = hexchars[(ch >> 12) & 0x0F];
             *out++ = hexchars[(ch >> 8) & 0x0F];

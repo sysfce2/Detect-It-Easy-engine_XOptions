@@ -182,6 +182,7 @@ public:
         ID_VIEW_FONT_TEXTEDITS,
         ID_VIEW_COLUMNS,
         ID_VIEW_COLUMN_SIZES,
+        ID_VIEW_SIZES,
         ID_VIEW_ADVANCED,
         ID_VIEW_SELECTSTYLE,
         ID_FILE_SAVELASTDIRECTORY,
@@ -309,6 +310,7 @@ public:
         ID_DISASM_COLOR_NUMBERS,
         ID_DISASM_COLOR_OPCODE,
         ID_DISASM_COLOR_REFS,
+        ID_DISASM_COLOR_CURRENTIP,
         ID_DISASM_COLOR_X86_REGS_GENERAL,
         ID_DISASM_COLOR_X86_REGS_STACK,
         ID_DISASM_COLOR_X86_REGS_SEGMENT,
@@ -557,6 +559,14 @@ public:
     void clearValue(ID id);
     bool isValuePresent(ID id);
     QVariant getDefaultValue(ID id);
+
+    // Named UI size/state records (window geometry, splitter state, ...), all
+    // serialized into the single ID_VIEW_SIZES string so an app can persist
+    // every widget's size through one option. Values are opaque QByteArrays
+    // (e.g. QWidget::saveGeometry()/QSplitter::saveState()). Requires the app
+    // to addID(ID_VIEW_SIZES, "").
+    void setSizeRecord(const QString &sName, const QByteArray &baValue);
+    QByteArray getSizeRecord(const QString &sName);
     static QString idToString(ID id);
     static QCommandLineOption getCommandLineOption(CONSOLE_OPTION_ID nId);
     QString getLastDirectory();
@@ -702,6 +712,8 @@ private slots:
 
 private:
     void _updateRecentFilesMenu();
+    static QMap<QString, QString> _parseSizeRecords(const QString &sValue);
+    static QString _serializeSizeRecords(const QMap<QString, QString> &mapRecords);
 
 signals:
     void errorMessage(const QString &sText);
