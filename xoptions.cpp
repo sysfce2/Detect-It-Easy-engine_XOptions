@@ -22,6 +22,8 @@
 
 #include <QtGlobal>
 
+#include <new>
+
 static const XOptions::CONSOLE_OPTION g_consoleOptions[] = {
     {XOptions::CONSOLE_OPTION_ID_RECURSIVESCAN, "r", "recursivescan", "Scan directories recursively"},
     {XOptions::CONSOLE_OPTION_ID_DEEPSCAN, "d", "deepscan", "Enable deep scanning for thorough analysis"},
@@ -2638,15 +2640,21 @@ QList<QString> XOptions::getCodePages(bool bAll)
 void XOptions::registerCodecs()
 {
 #if (QT_VERSION_MAJOR < 6) || defined(QT_CORE5COMPAT_LIB)
-    {
-        codec_cp437 *pCodec = new codec_cp437;
+    // QTextCodec registers itself globally in its constructor and Qt owns and
+    // destroys registered codecs at application exit, so the instance is not
+    // deleted here. The guard keeps repeated calls (each console entry point
+    // may call this) from registering duplicate codec instances.
+    static bool g_bCodecsRegistered = false;
+
+    if (!g_bCodecsRegistered) {
+        codec_cp437 *pCodec = new (std::nothrow) codec_cp437;
 
         if (!pCodec) {
             qFatal("Codec failed");
         }
         // TODO: more codecs
 
-        // delete pCodec; // TODO: unregisterCodecs
+        g_bCodecsRegistered = true;
     }
 #endif
 }
