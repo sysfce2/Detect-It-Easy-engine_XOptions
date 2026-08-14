@@ -44,11 +44,14 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <property name="baseSize">
+     <property name="baseSize">
        <size>
         <width>200</width>
         <height>100</height>
        </size>
+      </property>
+      <property name="minimumWidth">
+       <number>170</number>
       </property>
      </widget>
      <widget class="QStackedWidget" name="stackedWidgetOptions">
@@ -701,7 +704,7 @@
      <item>
       <widget class="QPushButton" name="pushButtonDefault">
        <property name="text">
-        <string>Default</string>
+        <string>Restore Defaults...</string>
        </property>
       </widget>
      </item>
@@ -722,6 +725,9 @@
       <widget class="QPushButton" name="pushButtonOK">
        <property name="text">
         <string>OK</string>
+       </property>
+       <property name="default">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

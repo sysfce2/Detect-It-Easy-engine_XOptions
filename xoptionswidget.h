@@ -42,8 +42,8 @@ public:
     virtual void setGlobal(XShortcuts *pShortcuts, XOptions *pXOptions);
 
     void setOptions(XOptions *pOptions, const QString &sApplicationDisplayName);
-    void addListRecord(const QString &sTitle, qint32 nIndex);
-    void addPage(QWidget *pWidget, const QString &sTitle);
+    void addListRecord(const QString &sTitle, qint32 nIndex, XOptions::ICONTYPE iconType = XOptions::ICONTYPE_GENERIC);
+    void addPage(QWidget *pWidget, const QString &sTitle, XOptions::ICONTYPE iconType = XOptions::ICONTYPE_GENERIC);
     void setCurrentPage(qint32 nPage);  // TODO Check -> remove
     void setCurrentPage(XOptions::GROUPID groupId);
     virtual void reloadData(bool bSaveSelection);

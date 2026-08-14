@@ -20,6 +20,9 @@
  */
 #include "xoptionswidget.h"
 
+#include <QIcon>
+#include <QMessageBox>
+
 #include "ui_xoptionswidget.h"
 
 XOptionsWidget::XOptionsWidget(QWidget *pParent) : XShortcutsWidget(pParent), ui(new Ui::XOptionsWidget)
@@ -28,6 +31,12 @@ XOptionsWidget::XOptionsWidget(QWidget *pParent) : XShortcutsWidget(pParent), ui
 
     m_pParent = pParent;
     m_pOptions = nullptr;
+
+    ui->listWidgetOptions->setAccessibleName(tr("Options categories"));
+    ui->listWidgetOptions->setIconSize(QSize(18, 18));
+    ui->pushButtonDefault->setIcon(QIcon(XOptions::getIconPath(XOptions::ICONTYPE_RELOAD)));
+    ui->pushButtonDefault->setToolTip(tr("Restore every option to its default value"));
+    ui->pushButtonOK->setDefault(true);
 
     connect(this, SIGNAL(saveSignal()), this, SLOT(save()), Qt::DirectConnection);
     connect(this, SIGNAL(reloadSignal()), this, SLOT(reload()), Qt::DirectConnection);
@@ -66,47 +75,53 @@ void XOptionsWidget::setOptions(XOptions *pOptions, const QString &sApplicationD
     }
 
     if (m_pOptions->isGroupIDPresent(XOptions::GROUPID_VIEW)) {
-        addListRecord(tr("Appearance"), 0);
+        addListRecord(tr("Appearance"), 0, XOptions::ICONTYPE_OPTION);
         ui->pageView->setProperty("GROUPID", XOptions::GROUPID_VIEW);
     }
 
     if (m_pOptions->isGroupIDPresent(XOptions::GROUPID_FILE)) {
-        addListRecord(tr("File"), 1);
+        addListRecord(tr("File"), 1, XOptions::ICONTYPE_FILE);
         ui->pageFile->setProperty("GROUPID", XOptions::GROUPID_FILE);
     }
 
     if (m_pOptions->isIDPresent(XOptions::ID_VIEW_FONT_CONTROLS) || m_pOptions->isIDPresent(XOptions::ID_VIEW_FONT_TABLEVIEWS) ||
         m_pOptions->isIDPresent(XOptions::ID_VIEW_FONT_TREEVIEWS) || m_pOptions->isIDPresent(XOptions::ID_VIEW_FONT_TEXTEDITS)) {
-        addListRecord(tr("Fonts"), 2);
+        addListRecord(tr("Fonts"), 2, XOptions::ICONTYPE_EDIT);
         ui->pageFonts->setProperty("GROUPID", XOptions::GROUPID_FONTS);
     }
 
     if (m_pOptions->isIDPresent(XOptions::ID_FEATURE_READBUFFERSIZE) || m_pOptions->isIDPresent(XOptions::ID_FEATURE_FILEBUFFERSIZE) ||
         m_pOptions->isIDPresent(XOptions::ID_FEATURE_SSE2) || m_pOptions->isIDPresent(XOptions::ID_FEATURE_AVX2)) {
-        addListRecord(tr("Features"), 3);
+        addListRecord(tr("Features"), 3, XOptions::ICONTYPE_TOOL);
         ui->pageFeatures->setProperty("GROUPID", XOptions::GROUPID_FEATURES);
     }
 
     reload();
 }
 
-void XOptionsWidget::addListRecord(const QString &sTitle, qint32 nIndex)
+void XOptionsWidget::addListRecord(const QString &sTitle, qint32 nIndex, XOptions::ICONTYPE iconType)
 {
     QListWidgetItem *pItem = new QListWidgetItem;
 
     pItem->setText(sTitle);
     pItem->setData(Qt::UserRole, nIndex);
 
+    QString sIconPath = XOptions::getIconPath(iconType);
+
+    if (!sIconPath.isEmpty()) {
+        pItem->setIcon(QIcon(sIconPath));
+    }
+
     ui->listWidgetOptions->addItem(pItem);
 
-    XOptions::adjustListWidgetSize(ui->listWidgetOptions);
+    XOptions::adjustListWidgetSize(ui->listWidgetOptions, 170);
 }
 
-void XOptionsWidget::addPage(QWidget *pWidget, const QString &sTitle)
+void XOptionsWidget::addPage(QWidget *pWidget, const QString &sTitle, XOptions::ICONTYPE iconType)
 {
     qint32 nIndex = ui->stackedWidgetOptions->addWidget(pWidget);
 
-    addListRecord(sTitle, nIndex);
+    addListRecord(sTitle, nIndex, iconType);
 
     connect(this, SIGNAL(saveSignal()), pWidget, SLOT(save()), Qt::DirectConnection);
     connect(this, SIGNAL(reloadSignal()), pWidget, SLOT(reload()), Qt::DirectConnection);
@@ -486,6 +501,11 @@ void XOptionsWidget::on_toolButtonViewFontTextEdits_clicked()
 void XOptionsWidget::on_pushButtonDefault_clicked()
 {
     if (!m_pOptions) {
+        return;
+    }
+
+    if (QMessageBox::question(this, tr("Restore defaults"), tr("Restore all options to their default values?"), QMessageBox::RestoreDefaults | QMessageBox::Cancel,
+                              QMessageBox::Cancel) != QMessageBox::RestoreDefaults) {
         return;
     }
 
