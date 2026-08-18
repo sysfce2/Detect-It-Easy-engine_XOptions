@@ -43,7 +43,6 @@ static const XOptions::CONSOLE_OPTION g_consoleOptions[] = {
     {XOptions::CONSOLE_OPTION_ID_TSV, "t", "tsv", "Output results in TSV format"},
     {XOptions::CONSOLE_OPTION_ID_PLAINTEXT, "p", "plaintext", "Output results as plain text"},
     {XOptions::CONSOLE_OPTION_ID_DATABASE, "D", "database", "Set database path"},
-    {XOptions::CONSOLE_OPTION_ID_EXTRADATABASE, "E", "extradatabase", "Set extra database path"},
     {XOptions::CONSOLE_OPTION_ID_CUSTOMDATABASE, "C", "customdatabase", "Set custom database path"},
     {XOptions::CONSOLE_OPTION_ID_SHOWDATABASE, "s", "showdatabase", "Show database information"},
     {XOptions::CONSOLE_OPTION_ID_STRUCT, "S", "struct", "Show special file information using specified structure (e.g., 'Hash' or 'Hash#MD5')"},
@@ -215,10 +214,7 @@ XOptions::GROUPID XOptions::getGroupID(ID id)
         case ID_SCAN_ENGINE_YARA_ENABLED:
         case ID_SCAN_DIE_DATABASE_MAIN_PATH:
         case ID_SCAN_DIE_DATABASE_MAIN_UPDATE_URL:
-        case ID_SCAN_DIE_DATABASE_EXTRA_PATH:
-        case ID_SCAN_DIE_DATABASE_EXTRA_UPDATE_URL:
         case ID_SCAN_DIE_DATABASE_CUSTOM_PATH:
-        case ID_SCAN_DIE_DATABASE_EXTRA_ENABLED:
         case ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED:
         case ID_SCAN_YARA_DATABASE_PATH:
         case ID_SCAN_YARA_DATABASE_UPDATE_URL:
@@ -546,7 +542,7 @@ void XOptions::load()
         QVariant variant = pSettings->value(sName, varDefault);
 
         if (!variant.toString().contains("$data")) {
-            if ((id == ID_SCAN_DIE_DATABASE_MAIN_PATH) || (id == ID_SCAN_DIE_DATABASE_EXTRA_PATH) || (id == ID_SCAN_DIE_DATABASE_CUSTOM_PATH) ||
+            if ((id == ID_SCAN_DIE_DATABASE_MAIN_PATH) || (id == ID_SCAN_DIE_DATABASE_CUSTOM_PATH) ||
                 (id == ID_SCAN_YARA_DATABASE_PATH) || (id == ID_SCAN_PEID_DATABASE_PATH)) {
                 if ((!QDir(variant.toString()).exists()) && (!QFile(variant.toString()).exists())) {
                     variant = varDefault;
@@ -714,7 +710,7 @@ QCommandLineOption XOptions::getCommandLineOption(CONSOLE_OPTION_ID nId)
 
         listOptions << pOption->pszLong;
 
-        if ((nId == CONSOLE_OPTION_ID_DATABASE) || (nId == CONSOLE_OPTION_ID_EXTRADATABASE) || (nId == CONSOLE_OPTION_ID_CUSTOMDATABASE)) {
+        if ((nId == CONSOLE_OPTION_ID_DATABASE) || (nId == CONSOLE_OPTION_ID_CUSTOMDATABASE)) {
             return QCommandLineOption(listOptions, pOption->pszDescription, "path");
         } else if (nId == CONSOLE_OPTION_ID_STRUCT) {
             return QCommandLineOption(listOptions, pOption->pszDescription, "struct");
@@ -796,10 +792,7 @@ QString XOptions::idToString(ID id)
         case ID_SCAN_ENGINE_YARA_ENABLED: sResult = QString("Scan/Engine/Yara/Enabled"); break;
         case ID_SCAN_DIE_DATABASE_MAIN_PATH: sResult = QString("Scan/Die/Database/Main/Path"); break;
         case ID_SCAN_DIE_DATABASE_MAIN_UPDATE_URL: sResult = QString("Scan/Die/Database/Main/UpdateUrl"); break;
-        case ID_SCAN_DIE_DATABASE_EXTRA_PATH: sResult = QString("Scan/Die/Database/Extra/Path"); break;
-        case ID_SCAN_DIE_DATABASE_EXTRA_UPDATE_URL: sResult = QString("Scan/Die/Database/Extra/UpdateUrl"); break;
         case ID_SCAN_DIE_DATABASE_CUSTOM_PATH: sResult = QString("Scan/Die/Database/Custom/Path"); break;
-        case ID_SCAN_DIE_DATABASE_EXTRA_ENABLED: sResult = QString("Scan/Die/Database/Extra/Enabled"); break;
         case ID_SCAN_DIE_DATABASE_CUSTOM_ENABLED: sResult = QString("Scan/Die/Database/Custom/Enabled"); break;
         case ID_SCAN_YARA_DATABASE_PATH: sResult = QString("Scan/Yara/Database/Path"); break;
         case ID_SCAN_YARA_DATABASE_UPDATE_URL: sResult = QString("Scan/Yara/Database/UpdateUrl"); break;
