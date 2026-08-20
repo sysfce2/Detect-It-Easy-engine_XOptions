@@ -207,8 +207,12 @@ void DialogViewColors::pushButtonSlot()
     QString sBackgroundColor = (nSep >= 0) ? sColor.mid(nSep + 1) : QString();
 
     if (nColumn == COLUMN_TEXT_COLOR) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+        QColor color = QColor::fromString(sTextColor);
+#else
         QColor color;
         color.setNamedColor(sTextColor);
+#endif
 
         color = XOptions::getColorDialog(this, tr("Color"), color);
 
@@ -216,8 +220,12 @@ void DialogViewColors::pushButtonSlot()
             sTextColor = color.name();
         }
     } else if (nColumn == COLUMN_BACKGROUND_COLOR) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+        QColor color = QColor::fromString(sBackgroundColor);
+#else
         QColor color;
         color.setNamedColor(sBackgroundColor);
+#endif
 
         color = XOptions::getColorDialog(this, tr("Background"), color);
 
