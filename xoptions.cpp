@@ -1560,6 +1560,23 @@ void XOptions::setComboBox(QComboBox *pComboBox, XOptions::ID id)
         }
     }
 
+    // The stored value may not be on offer on this machine: a language whose .qm
+    // is not installed, a style this Qt build does not provide, a QSS that was
+    // removed. Leaving nIndex at -1 parks the combo on item 0, and the matching
+    // getComboBox() then writes THAT back on OK - silently destroying the user's
+    // setting just because they opened the dialog. Offer the configured value
+    // instead, so the round trip preserves it.
+    //
+    // Restricted to the text-valued IDs on purpose: the numeric combos (memory
+    // sizes and the like) carry integer item data, and a string fallback item
+    // would change the type written back.
+    const bool bTextValued = (id == ID_VIEW_LANG) || (id == ID_VIEW_STYLE) || (id == ID_VIEW_QSS);
+
+    if ((nIndex == -1) && bTextValued && (!sValue.isEmpty())) {
+        pComboBox->addItem(sValue, sValue);
+        nIndex = pComboBox->count() - 1;
+    }
+
     if (nIndex != -1) {
         pComboBox->setCurrentIndex(nIndex);
     }
