@@ -542,8 +542,8 @@ void XOptions::load()
         QVariant variant = pSettings->value(sName, varDefault);
 
         if (!variant.toString().contains("$data")) {
-            if ((id == ID_SCAN_DIE_DATABASE_MAIN_PATH) || (id == ID_SCAN_DIE_DATABASE_CUSTOM_PATH) ||
-                (id == ID_SCAN_YARA_DATABASE_PATH) || (id == ID_SCAN_PEID_DATABASE_PATH)) {
+            if ((id == ID_SCAN_DIE_DATABASE_MAIN_PATH) || (id == ID_SCAN_DIE_DATABASE_CUSTOM_PATH) || (id == ID_SCAN_YARA_DATABASE_PATH) ||
+                (id == ID_SCAN_PEID_DATABASE_PATH)) {
                 if ((!QDir(variant.toString()).exists()) && (!QFile(variant.toString()).exists())) {
                     variant = varDefault;
                 }
