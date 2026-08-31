@@ -135,7 +135,9 @@ public:
         CR_CANNOTFINDFILE = 1,
         CR_CANNOTOPENFILE = 2,
         CR_CANNOTFINDDATABASE = 3,
-        CR_INVALIDPARAMETER = 4
+        CR_INVALIDPARAMETER = 4,
+        CR_PARTIALRESULT = 5,
+        CR_PROBETIMEOUT = 6
         // TODO: Add more CR's
     };
 
